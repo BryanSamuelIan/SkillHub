@@ -3,7 +3,6 @@
 import mysql.connector
 from mysql.connector import Error
 from typing import List, Dict, Optional
-import streamlit as st
 from datetime import datetime
 
 
@@ -48,7 +47,6 @@ class DatabaseConnection:
                 self.cursor = self.connection.cursor(dictionary=True)
                 return True
         except Error as e:
-            st.error(f"Error koneksi database: {e}")
             return False
     
     def disconnect(self):
@@ -74,7 +72,6 @@ class DatabaseConnection:
             self.connection.commit()
             return True
         except Error as e:
-            st.error(f"Error menjalankan query: {e}")
             self.connection.rollback()
             return False
     
@@ -93,7 +90,6 @@ class DatabaseConnection:
             self.cursor.execute(query, params)
             return self.cursor.fetchall()
         except Error as e:
-            st.error(f"Error fetch data: {e}")
             return []
     
     def fetch_one(self, query: str, params: tuple = None) -> Optional[Dict]:
@@ -111,5 +107,4 @@ class DatabaseConnection:
             self.cursor.execute(query, params)
             return self.cursor.fetchone()
         except Error as e:
-            st.error(f"Error fetch data: {e}")
             return None

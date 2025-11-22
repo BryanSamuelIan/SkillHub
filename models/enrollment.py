@@ -1,7 +1,8 @@
 # ==================== ENROLLMENT MODEL ====================
 from .baseModel import BaseModel
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict
+import streamlit as st
 
 class Enrollment(BaseModel):
     """

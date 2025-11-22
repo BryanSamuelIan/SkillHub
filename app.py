@@ -1,20 +1,5 @@
 """
-SkillHub Management System
-Sistem Manajemen Kursus Keterampilan
-
-Author: Bryan Samuel
-Date: 2025-11-22
-Version: 1.0
-
-Deskripsi:
-Aplikasi web untuk mengelola data peserta, kelas, dan pendaftaran
-di studio kursus SkillHub menggunakan Streamlit dan MySQL.
-
-Fitur:
-- Manajemen Data Peserta (CRUD)
-- Manajemen Data Kelas (CRUD)
-- Manajemen Pendaftaran Peserta ke Kelas
-- Relasi Many-to-Many antara Peserta dan Kelas
+Main application untuk SkillHub Management System
 
 """
 
@@ -24,7 +9,7 @@ import os
 
 from models.participant import Participant
 from models.course import Course
-from databaseConnection import DatabaseConnection
+from models.databaseConnection import DatabaseConnection
 from models.enrollment import Enrollment
 from datetime import datetime
 
@@ -222,7 +207,12 @@ def show_participant_management(db: DatabaseConnection):
             if st.button("🗑️ Hapus Peserta", type="primary"):
                 participant_id = participant_options[selected]
                 if participant_model.delete(participant_id):
-                    st.success("✅ Peserta berhasil dihapus!")
+                    st.session_state["success_delete_participant"] = True
+                    st.experimental_rerun()
+
+            if st.session_state.get("success_delete_participant"):   
+                st.success("✅ Participant berhasil dihapus!")
+                del st.session_state["success_delete_participant"]
 
         else:
             st.info("Belum ada data peserta.")
@@ -342,6 +332,7 @@ def show_course_management(db: DatabaseConnection):
 
         else:
             st.info("Belum ada data kelas.")
+            
     
     # TAB: Hapus Kelas
     with tab5:
@@ -357,7 +348,13 @@ def show_course_management(db: DatabaseConnection):
             if st.button("🗑️ Hapus Kelas", type="primary"):
                 course_id = course_options[selected]
                 if course_model.delete(course_id):
-                    st.success("✅ Kelas berhasil dihapus!")
+                    st.session_state["success_delete_course"] = True
+                    st.experimental_rerun()
+
+            if st.session_state.get("success_delete_course"):   
+                st.success("✅ Kelas berhasil dihapus!")
+                del st.session_state["success_delete_course"]
+
         else:
             st.info("Belum ada data kelas.")
 
@@ -428,14 +425,13 @@ def show_enrollment_management(db: DatabaseConnection):
                         st.session_state["success_enrollment"] = True
                         st.experimental_rerun()
 
+                if st.session_state.get("success_enrollment"):
+                    st.success("✅ Peserta berhasil didaftarkan ke kelas!")
+                    del st.session_state["success_enrollment"]
+
             else:
                 st.warning("Peserta ini sudah mengambil semua kelas!")
                 st.form_submit_button("💾 Daftarkan", disabled=True)
-
-        if st.session_state.get("success_enrollment"):
-            st.success("✅ Peserta berhasil didaftarkan ke kelas!")
-            del st.session_state["success_enrollment"]
-
 
       
         # TAB: Semua Pendaftaran
@@ -532,12 +528,12 @@ def show_enrollment_management(db: DatabaseConnection):
             if st.button("🗑️ Hapus Pendaftaran", type="primary"):
                 participant_id, course_id = enrollment_options[selected]
                 if enrollment_model.delete(participant_id, course_id):
-                    st.session_state["success_delete_pendaftaran"] = True
+                    st.session_state["success_delete_enrollment"] = True
                     st.experimental_rerun()
 
-                if st.session_state.get("success_delete"):   
-                    st.success("✅ Pendaftaran berhasil dihapus!")
-                    del st.session_state["success_delete_pendaftaran"]
+            if st.session_state.get("success_delete_enrollment"):   
+                st.success("✅ Pendaftaran berhasil dihapus!")
+                del st.session_state["success_delete_enrollment"]
 
         else:
             st.info("Belum ada data pendaftaran.")
