@@ -197,7 +197,13 @@ def show_participant_management(db: DatabaseConnection):
                             st.error("Nama dan Email wajib diisi!")
                         else:
                             if participant_model.update(participant_id, nama, email, no_telp, alamat):
-                                st.success("✅ Data peserta berhasil diupdate!")
+                                st.session_state["success_edit"] = True
+                                st.experimental_rerun()
+
+                    # Tampilkan setelah reload
+                    if st.session_state.get("success_edit"):
+                        st.success("✅ Data kelas berhasil diupdate!")
+                        del st.session_state["success_edit"]
 
         else:
             st.info("Belum ada data peserta.")
@@ -326,7 +332,13 @@ def show_course_management(db: DatabaseConnection):
                             st.error("Nama Kelas dan Instruktur wajib diisi!")
                         else:
                             if course_model.update(course_id, nama_kelas, deskripsi, instruktur):
-                                st.success("✅ Data kelas berhasil diupdate!")
+                                st.session_state["success_edit"] = True
+                                st.experimental_rerun()
+
+                    # Tampilkan setelah reload
+                    if st.session_state.get("success_edit"):
+                        st.success("✅ Data kelas berhasil diupdate!")
+                        del st.session_state["success_edit"]
 
         else:
             st.info("Belum ada data kelas.")
@@ -365,41 +377,66 @@ def show_enrollment_management(db: DatabaseConnection):
     # TAB: Daftarkan Peserta ke Kelas
     with tab1:
         st.subheader("Daftarkan Peserta ke Kelas")
-        
+
         participants = participant_model.get_all()
         courses = course_model.get_all()
-        
+
         if not participants:
             st.warning("⚠️ Belum ada data peserta. Tambahkan peserta terlebih dahulu.")
-        elif not courses:
+            st.stop()
+
+        if not courses:
             st.warning("⚠️ Belum ada data kelas. Tambahkan kelas terlebih dahulu.")
-        else:
-            with st.form("add_enrollment_form"):
-                participant_options = {f"{p['id']} - {p['nama']}": p['id'] for p in participants}
-                selected_participant = st.selectbox("Pilih Peserta *", options=list(participant_options.keys()))
-                
-                course_options = {f"{c['id']} - {c['nama_kelas']}": c['id'] for c in courses}
-                selected_courses = st.multiselect(
-                    "Pilih Kelas (bisa lebih dari satu) *", 
-                    options=list(course_options.keys())
+            st.stop()
+
+        participant_options = {f"{p['id']} - {p['nama']}": p['id'] for p in participants}
+
+        selected_participant_label = st.selectbox(
+            "Pilih Peserta *",
+            options=list(participant_options.keys()),
+            key="select_participant" 
+        )
+
+        participant_id = participant_options[selected_participant_label]
+
+        # Ambil kelas yang sudah diikuti peserta
+        enrolled = enrollment_model.get_courses_by_participant(participant_id)
+        enrolled_ids = {e['id'] for e in enrolled}
+
+        # Kelas yang belum diambil
+        available_courses = [c for c in courses if c['id'] not in enrolled_ids]
+
+        with st.form("add_enrollment_form"):
+
+            if available_courses:
+                course_options = {
+                    f"{c['id']} - {c['nama_kelas']}": c['id']
+                    for c in available_courses
+                }
+
+                selected_course_label = st.selectbox(
+                    "Pilih Kelas",
+                    options=list(course_options.keys()),
+                    key="select_course"
                 )
-                
+
                 submitted = st.form_submit_button("💾 Daftarkan")
-                
+
                 if submitted:
-                    if not selected_courses:
-                        st.error("Pilih minimal satu kelas!")
-                    else:
-                        participant_id = participant_options[selected_participant]
-                        success_count = 0
-                        
-                        for course_key in selected_courses:
-                            course_id = course_options[course_key]
-                            if enrollment_model.create(participant_id, course_id):
-                                success_count += 1
-                        
-                        if success_count > 0:
-                            st.success(f"✅ Berhasil mendaftarkan {success_count} kelas!")
+                    course_id = course_options[selected_course_label]
+                    if enrollment_model.create(participant_id, course_id):
+                        st.session_state["success_enrollment"] = True
+                        st.experimental_rerun()
+
+            else:
+                st.warning("Peserta ini sudah mengambil semua kelas!")
+                st.form_submit_button("💾 Daftarkan", disabled=True)
+
+        if st.session_state.get("success_enrollment"):
+            st.success("✅ Peserta berhasil didaftarkan ke kelas!")
+            del st.session_state["success_enrollment"]
+
+
       
         # TAB: Semua Pendaftaran
     with tab2:
@@ -495,7 +532,12 @@ def show_enrollment_management(db: DatabaseConnection):
             if st.button("🗑️ Hapus Pendaftaran", type="primary"):
                 participant_id, course_id = enrollment_options[selected]
                 if enrollment_model.delete(participant_id, course_id):
+                    st.session_state["success_delete_pendaftaran"] = True
+                    st.experimental_rerun()
+
+                if st.session_state.get("success_delete"):   
                     st.success("✅ Pendaftaran berhasil dihapus!")
+                    del st.session_state["success_delete_pendaftaran"]
 
         else:
             st.info("Belum ada data pendaftaran.")
@@ -533,7 +575,7 @@ def show_dashboard(db: DatabaseConnection):
     with col1:
         st.subheader("🆕 Peserta Terbaru")
         if participants:
-            recent_participants = participants[:5]
+            recent_participants = participants[-3:]
             for p in recent_participants:
                 st.write(f"• **{p['nama']}** - {p['email']}")
         else:
@@ -542,7 +584,7 @@ def show_dashboard(db: DatabaseConnection):
     with col2:
         st.subheader("🆕 Kelas Terbaru")
         if courses:
-            recent_courses = courses[:5]
+            recent_courses = courses[-3:]
             for c in recent_courses:
                 st.write(f"• **{c['nama_kelas']}** - Instruktur: {c['instruktur']}")
         else:
@@ -550,10 +592,9 @@ def show_dashboard(db: DatabaseConnection):
     
     st.divider()
     
-    # Pendaftaran Terbaru
-    st.subheader("📋 Pendaftaran Terbaru")
+    st.subheader("🆕 Pendaftaran Terbaru")
     if enrollments:
-        df = pd.DataFrame(enrollments[:10])
+        df = pd.DataFrame(enrollments[-5:])
         df['tanggal_daftar'] = pd.to_datetime(df['tanggal_daftar']).dt.strftime('%Y-%m-%d %H:%M')
         st.dataframe(df[['nama_peserta', 'nama_kelas', 'tanggal_daftar']], 
                      use_container_width=True, hide_index=True)
@@ -578,17 +619,23 @@ def main():
     # Header
     st.title("🎓 SkillHub Management System")
     st.markdown("*Sistem Manajemen Kursus Keterampilan*")
+
+    # Inisialisasi menu
+    if "menu" not in st.session_state:
+        st.session_state["menu"] = "Dashboard"
     
     # Sidebar untuk konfigurasi database
     with st.sidebar:
-        # Menu navigasi
         st.header("🧭 Menu Navigasi")
-        menu = st.radio(
-            "Pilih Menu:",
-            ["📊 Dashboard", "📋 Manajemen Peserta", "🎓 Manajemen Kelas", "📝 Manajemen Pendaftaran"],
-            label_visibility="collapsed"
-        )
-        
+        col1 = st.container()
+        if st.button("📊 Dashboard", use_container_width=True):
+            st.session_state["menu"] = "Dashboard"
+        if st.button("👥 Manajemen Peserta", use_container_width=True):
+            st.session_state["menu"] = "Manajemen Peserta"
+        if st.button("🎓 Manajemen Kelas", use_container_width=True):
+            st.session_state["menu"] = "Manajemen Kelas"
+        if st.button("📝 Manajemen Pendaftaran", use_container_width=True):
+            st.session_state["menu"] = "Manajemen Pendaftaran"
         
     
     # Inisialisasi koneksi database
@@ -614,30 +661,22 @@ def main():
             init_database(db)
             
             # Routing menu
-            if menu == "📊 Dashboard":
+            if st.session_state["menu"] == "Dashboard":
                 show_dashboard(db)
-            elif menu == "📋 Manajemen Peserta":
+            elif st.session_state["menu"] == "Manajemen Peserta":
                 show_participant_management(db)
-            elif menu == "🎓 Manajemen Kelas":
+            elif st.session_state["menu"] == "Manajemen Kelas":
                 show_course_management(db)
-            elif menu == "📝 Manajemen Pendaftaran":
+            elif st.session_state["menu"] == "Manajemen Pendaftaran":
                 show_enrollment_management(db)
             
             # Tutup koneksi setelah selesai
             db.disconnect()
         else:
-            st.error("❌ Gagal terhubung ke database. Periksa konfigurasi di sidebar.")
-            st.info("💡 Pastikan MySQL sudah berjalan dan database 'skillhub_db' sudah dibuat.")
-            
-            with st.expander("📖 Cara Membuat Database"):
-                st.code("""
--- Jalankan query ini di MySQL:
-CREATE DATABASE skillhub_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-                """, language="sql")
+            st.error("❌ Gagal terhubung ke database. Periksa konfigurasi database.")
     
     except Exception as e:
         st.error(f"❌ Error: {e}")
-        st.info("💡 Pastikan MySQL sudah terinstall dan berjalan dengan baik.")
 
 
 if __name__ == "__main__":

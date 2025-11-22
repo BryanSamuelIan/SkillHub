@@ -6,7 +6,6 @@ from typing import List, Dict, Optional
 class Enrollment(BaseModel):
     """
     Model untuk mengelola pendaftaran peserta ke kelas.
-    Mengimplementasikan relasi many-to-many antara peserta dan kelas.
     """
     
     def create(self, participant_id: int, course_id: int) -> bool:
@@ -53,7 +52,7 @@ class Enrollment(BaseModel):
         FROM courses c
         JOIN enrollments e ON c.id = e.course_id
         WHERE e.participant_id = %s
-        ORDER BY e.tanggal_daftar DESC
+        ORDER BY e.tanggal_daftar ASC
         """
         return self.db.fetch_all(query, (participant_id,))
     
@@ -72,7 +71,7 @@ class Enrollment(BaseModel):
         FROM participants p
         JOIN enrollments e ON p.id = e.participant_id
         WHERE e.course_id = %s
-        ORDER BY e.tanggal_daftar DESC
+        ORDER BY e.tanggal_daftar ASC
         """
         return self.db.fetch_all(query, (course_id,))
     
@@ -111,6 +110,6 @@ class Enrollment(BaseModel):
         FROM enrollments e
         JOIN participants p ON e.participant_id = p.id
         JOIN courses c ON e.course_id = c.id
-        ORDER BY e.tanggal_daftar DESC
+        ORDER BY e.tanggal_daftar ASC
         """
         return self.db.fetch_all(query)

@@ -1,8 +1,8 @@
 # Framework Web
-streamlit==1.28.0
+streamlit==1.32.0
 
 # Database Connector
 mysql-connector-python==8.2.0
 
 # Data Manipulation & Display
-pandas==2.1.0
+pandas==2.2.2

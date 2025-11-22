@@ -7,7 +7,6 @@ from typing import List, Dict, Optional
 class Course(BaseModel):
     """
     Model untuk mengelola data kelas.
-    Mengimplementasikan operasi CRUD untuk tabel courses.
     """
     
     def create(self, nama_kelas: str, deskripsi: str, instruktur: str) -> bool:
@@ -36,7 +35,7 @@ class Course(BaseModel):
         Returns:
             List[Dict]: List kelas
         """
-        query = "SELECT * FROM courses ORDER BY id DESC"
+        query = "SELECT * FROM courses ORDER BY id ASC"
         return self.db.fetch_all(query)
     
     def get_by_id(self, course_id: int) -> Optional[Dict]:

@@ -6,7 +6,6 @@ from datetime import datetime
 class Participant(BaseModel):
     """
     Model untuk mengelola data peserta.
-    Mengimplementasikan operasi CRUD untuk tabel participants.
     """
     
     def create(self, nama: str, email: str, no_telp: str, alamat: str) -> bool:
@@ -36,7 +35,7 @@ class Participant(BaseModel):
         Returns:
             List[Dict]: List peserta
         """
-        query = "SELECT * FROM participants ORDER BY id DESC"
+        query = "SELECT * FROM participants ORDER BY id ASC"
         return self.db.fetch_all(query)
     
     def get_by_id(self, participant_id: int) -> Optional[Dict]:

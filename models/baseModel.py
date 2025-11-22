@@ -3,8 +3,7 @@ from databaseConnection import DatabaseConnection
 
 class BaseModel:
     """
-    Base class untuk semua model.
-    Menyediakan fungsi umum untuk akses database.
+    Parent class untuk semua model.
     """
     
     def __init__(self, db: DatabaseConnection):
@@ -14,4 +13,4 @@ class BaseModel:
         Args:
             db: Instance DatabaseConnection
         """
-        self.db = db
+        self.db = db 
