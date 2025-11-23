@@ -20,6 +20,8 @@ export DB_USER="your user here"
 export DB_PASSWORD="your password here"
 export DB_NAME="your database name here"
 
+Example of the database can be accesed trough "skillhub_db.sql"
+
 # Run Application
 Paste this into your terminal: streamlit run app.py
 

@@ -3,7 +3,6 @@
 import mysql.connector
 from mysql.connector import Error
 from typing import List, Dict, Optional
-from datetime import datetime
 
 
 class DatabaseConnection:
