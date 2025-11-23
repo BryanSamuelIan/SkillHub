@@ -1,5 +1,5 @@
 # ==================== BASE MODEL CLASS ====================
-from .databaseConnection import DatabaseConnection
+from databaseConnection import DatabaseConnection
 
 class BaseModel:
     """

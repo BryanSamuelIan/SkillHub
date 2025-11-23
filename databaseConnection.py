@@ -28,6 +28,7 @@ class DatabaseConnection:
         self.database = database
         self.connection = None
         self.cursor = None
+        self.connect()
     
     def connect(self) -> bool:
         """
@@ -57,7 +58,7 @@ class DatabaseConnection:
             self.connection.close()
     
     def execute_query(self, query: str, params: tuple = None) -> bool:
-        """
+        """"
         Menjalankan query INSERT, UPDATE, DELETE.
         
         Args:

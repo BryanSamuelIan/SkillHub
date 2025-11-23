@@ -5,7 +5,7 @@ Unit tests for DatabaseConnection class.
 import pytest
 from unittest.mock import patch, MagicMock
 from mysql.connector import Error
-from models.databaseConnection import DatabaseConnection
+from databaseConnection import DatabaseConnection
 
 
 class TestDatabaseConnectionInit:
